@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+  <div class="col s12 m10 offset-m1">
+    <h3 class="header">Metrics</h3>
+    <table class="striped">
+      <thead>
+        <tr>
+            <th>Name</th>
+            <th>Archive Policy</th>
+            <th>Definition</th>
+            <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for metric in metrics %}
+        <tr>
+          <td>{{ metric.name }}</td>
+          <td>{{ metric.archive_policy.name }}</td>
+          <td>
+            {% for definition in metric.archive_policy.definition %}
+              <li>
+                Timespan: {{ definition.timespan }},
+                Granularity: {{ definition.granularity }}
+              </li>
+            {% endfor %}
+          </td>
+          <td>
+            <a href="{{metric.id}}"><i class="material-icons">insert_chart</i></a>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
