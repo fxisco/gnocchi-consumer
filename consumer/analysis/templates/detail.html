@@ -4,7 +4,7 @@
 	<form method="post" enctype="multipart/form-data">
 		{% csrf_token %}
 		<div class="col s12">
-			<button class="waves-effect waves-light btn teal lighten-1" type="submit" formmethod="get">Back</button>
+			<button class="waves-effect waves-light btn teal lighten-1"> <a class="white-text" href="http://172.16.3.36:8000/metrics/">Back </a></button>
 			<h3 class="header">{{metric.name}}</h3>
 			<div class="col s2">
 				<h6 class="header">Aggregation</h6>
