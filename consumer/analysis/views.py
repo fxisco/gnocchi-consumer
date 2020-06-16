@@ -2,12 +2,38 @@ from django.shortcuts import render, redirect
 from . import helpers
 from .forms import MetricsForm
 from datetime import date
+import json
+
+def getSession(request):
+  # Need a Token
+  token = helpers.get_token()
+
+  # if token wasn't found
+  if token == None:
+    return render(request, 'error_page.html', { "error": "Token not found!" })
+
+  # Gets Session to make the requests
+  session = helpers.get_requests_session(token)
+
+  return session
+
 
 def index(request):
-    metrics = [{"id": "10e7a9fe-7bc2-4324-a983-0147f17144f5", "creator": "297cb656c0054fa98b070504e85e07c9:eb65f9e29c134540987622dd60c8dc27", "name": "humidity", "unit": "null", "resource_id": "null", "archive_policy": {"name": "low", "back_window": 0, "definition": [{"timespan": "30 days, 0:00:00", "granularity": "0:05:00", "points": 8640}], "aggregation_methods": ["count", "min", "std", "max", "sum", "mean"]}, "created_by_user_id": "297cb656c0054fa98b070504e85e07c9", "created_by_project_id": "eb65f9e29c134540987622dd60c8dc27"}, {"id": "ca3ac69a-67d0-4bd4-bd8b-22debdab0fb3", "creator": "297cb656c0054fa98b070504e85e07c9:eb65f9e29c134540987622dd60c8dc27", "name": "temperature", "unit": "null", "resource_id": "null", "archive_policy": {"name": "medium", "back_window": 0, "definition": [{"timespan": "7 days, 0:00:00", "granularity": "0:01:00", "points": 10080}, {"timespan": "365 days, 0:00:00", "granularity": "1:00:00", "points": 8760}], "aggregation_methods": ["count", "min", "std", "max", "sum", "mean"]}, "created_by_user_id": "297cb656c0054fa98b070504e85e07c9", "created_by_project_id": "eb65f9e29c134540987622dd60c8dc27"}, {"id": "e96fb878-7eb1-41b7-a2e2-91209818a84c", "creator": "297cb656c0054fa98b070504e85e07c9:eb65f9e29c134540987622dd60c8dc27", "name": "wind speed", "unit": "null", "resource_id": "null", "archive_policy": {"name": "high", "back_window": 0, "definition": [{"timespan": "1:00:00", "granularity": "0:00:01", "points": 3600}, {"timespan": "7 days, 0:00:00", "granularity": "0:01:00", "points": 10080}, {"timespan": "365 days, 0:00:00", "granularity": "1:00:00", "points": 8760}], "aggregation_methods": ["count", "min", "std", "max", "sum", "mean"]}, "created_by_user_id": "297cb656c0054fa98b070504e85e07c9", "created_by_project_id": "eb65f9e29c134540987622dd60c8dc27"}]
 
+    sess = getSession(request)
+
+    # Do the request, this returns TEXT
+    response = sess.get("http://252.3.36.203:8041/v1/metric")
+
+    # Parse the TEXT response to JSON
+    metrics = json.loads(response.text)
+
+    # Check errors in response
+    if "error" in metrics:
+      return render(request, 'error_page.html', { "error": metrics["error"]["message"] })
+
+    # if successful, print response
     return render(request, 'metrics.html', { "metrics": metrics })
-
 
 def detail(request, id, definition = 0, aggregation = 'mean', start_date = None, stop_date = None):
 
@@ -28,51 +54,36 @@ def detail(request, id, definition = 0, aggregation = 'mean', start_date = None,
   if stop_date == None:
     stop_date = helpers.getLastDateOfMonth()
 
-  metric = {
-      "id":"10e7a9fe-7bc2-4324-a983-0147f17144f5",
-      "creator":"297cb656c0054fa98b070504e85e07c9:eb65f9e29c134540987622dd60c8dc27",
-      "name":"humidity",
-      "unit": "null",
-      "resource_id": "null",
-      "archive_policy":{
-         "name":"low",
-         "back_window":0,
-         "definition":[
-            {
-               "timespan":"30 days, 0:00:00",
-               "granularity":"0:05:00",
-               "points":8640
-            }
-         ],
-         "aggregation_methods":[
-            "count",
-            "min",
-            "std",
-            "max",
-            "sum",
-            "mean"
-         ]
-      },
-      "created_by_user_id":"297cb656c0054fa98b070504e85e07c9",
-      "created_by_project_id":"eb65f9e29c134540987622dd60c8dc27"
-   }
+  sess = getSession(request)
 
-  values = [
-  ["2020-06-10T16:40:00+00:00", 300.0, 57.013062521671884],
-  ["2020-06-10T16:45:00+00:00", 300.0, 60.96430624660876],
-  ["2020-06-10T16:50:00+00:00", 300.0, 40.85293391772962],
-  ["2020-06-10T16:55:00+00:00", 300.0, 61.971238021727615],
-  ["2020-06-10T17:00:00+00:00", 300.0, 56.56529251040247],
-  ["2020-06-10T17:05:00+00:00", 300.0, 47.71236036419723],
-  ["2020-06-10T17:10:00+00:00", 300.0, 48.39607345539477],
-  ["2020-06-10T17:15:00+00:00", 300.0, 56.09292152158552],
-  ["2020-06-10T17:20:00+00:00", 300.0, 58.20539502381264],
-  ["2020-06-10T17:25:00+00:00", 300.0, 52.58915302713453]
-]
+  # Do the request, this returns TEXT
+  response = sess.get("http://252.3.36.203:8041/v1/metric/" + id)
 
-  granularity = helpers.getTimeInSeconds(metric["archive_policy"]["definition"][definition]["granularity"])
-  dates = [ element[0] for element in values if element[1] == granularity ]
-  values = [ element[2] for element in values if element[1] == granularity ]
+  metric = json.loads(response.text)
+
+  # Check errors in response
+  if "error" in metric:
+    return render(request, 'error_page.html', { "error": metric["error"]["message"] })
+
+  # Do the request, this returns TEXT
+  response_values = sess.get("http://252.3.36.203:8041/v1/metric/" + id + "/measures")
+
+  values = json.loads(response_values.text)
+
+  # Check errors in response
+  if "error" in values:
+    return render(request, 'error_page.html', { "error": values["error"]["message"] })
+
+  # We pick the definition from the response, by default the first one (i.e.: index: 0)
+  granularity_value = metric["archive_policy"]["definition"][definition]["granularity"]
+  # Convert granularity time in seconds (e.g.: "0:01:00" -> 60)
+  granularity_in_seconds = helpers.getTimeInSeconds(granularity_value)
+
+  # We filter values by granularity chosen to get the DATES
+  dates = [ element[0] for element in values if element[1] == granularity_in_seconds ]
+
+  # We filter values by granularity chosen to get the VALUES
+  values = [ element[2] for element in values if element[1] == granularity_in_seconds ]
 
   data = {
     "start_date": start_date,
