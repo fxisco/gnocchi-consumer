@@ -5,7 +5,7 @@
 		{% csrf_token %}
 		<div class="col s12">
 			<button class="waves-effect waves-light btn teal lighten-1"> <a class="white-text" href="http://172.16.3.36:8000/metrics/">Back </a></button>
-			<h3 class="header">{{metric.name}}</h3>
+			<h3 class="header">Metric: {{metric.name}}</h3>
 			<div class="col s2">
 				<h6 class="header">Aggregation</h6>
 				{% for method in metric.archive_policy.aggregation_methods %}
@@ -66,7 +66,7 @@
   var config = {
   	type: 'line',
   	data: {
-  		labels: {{ dates|safe }},
+  		labels: {{ labels|safe }},
   		datasets: [{
   			label: "{{ metric.name }}",
   			backgroundColor: 'red',
@@ -79,7 +79,7 @@
   		responsive: true,
 		title: {
   			display: true,
-  			text: 'Time series'
+  			text: 'Gnocchi data'
   		},
   		tooltips: {
   			mode: 'index',

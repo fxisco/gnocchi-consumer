@@ -4,6 +4,8 @@ from .forms import MetricsForm
 from datetime import date
 import json
 
+global_url = "http://252.3.36.203:8041/v1/metric/"
+
 def getSession(request):
   # Need a Token
   token = helpers.get_token()
@@ -23,7 +25,7 @@ def index(request):
     sess = getSession(request)
 
     # Do the request, this returns TEXT
-    response = sess.get("http://252.3.36.203:8041/v1/metric")
+    response = sess.get(global_url)
 
     # Parse the TEXT response to JSON
     metrics = json.loads(response.text)
@@ -35,7 +37,7 @@ def index(request):
     # if successful, print response
     return render(request, 'metrics.html', { "metrics": metrics })
 
-def detail(request, id, definition = 0, aggregation = 'mean', start_date = None, stop_date = None):
+def detail(request, id, definition = 0, aggregation = 'max', start_date = None, stop_date = None):
 
   if request.method == 'POST':
     form = MetricsForm(request.POST)
@@ -56,8 +58,8 @@ def detail(request, id, definition = 0, aggregation = 'mean', start_date = None,
 
   sess = getSession(request)
 
-  # Do the request, this returns TEXT
-  response = sess.get("http://252.3.36.203:8041/v1/metric/" + id)
+  # Do the request, this returns TEXT (REST GET)
+  response = sess.get(global_url + id)
 
   metric = json.loads(response.text)
 
@@ -65,8 +67,8 @@ def detail(request, id, definition = 0, aggregation = 'mean', start_date = None,
   if "error" in metric:
     return render(request, 'error_page.html', { "error": metric["error"]["message"] })
 
-  # Do the request, this returns TEXT
-  response_values = sess.get("http://252.3.36.203:8041/v1/metric/" + id + "/measures")
+  # Do the request, this returns TEXT (REST GET METHOD)
+  response_values = sess.get(global_url + id + "/measures?aggregation=" + aggregation)
 
   values = json.loads(response_values.text)
 
@@ -80,7 +82,7 @@ def detail(request, id, definition = 0, aggregation = 'mean', start_date = None,
   granularity_in_seconds = helpers.getTimeInSeconds(granularity_value)
 
   # We filter values by granularity chosen to get the DATES
-  dates = [ element[0] for element in values if element[1] == granularity_in_seconds ]
+  labels = [ element[0] for element in values if element[1] == granularity_in_seconds ]
 
   # We filter values by granularity chosen to get the VALUES
   values = [ element[2] for element in values if element[1] == granularity_in_seconds ]
@@ -89,7 +91,7 @@ def detail(request, id, definition = 0, aggregation = 'mean', start_date = None,
     "start_date": start_date,
     "stop_date": stop_date,
     "metric": metric,
-    "dates": dates,
+    "labels": labels,
     "values": values,
     "selectedDefinition": definition,
     "selectedAggregation": aggregation
