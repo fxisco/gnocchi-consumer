@@ -4,7 +4,7 @@
 	<form method="post" enctype="multipart/form-data">
 		{% csrf_token %}
 		<div class="col s12">
-			<button class="waves-effect waves-light btn teal lighten-1"> <a class="white-text" href="http://172.16.3.36:8000/metrics/">Back </a></button>
+			<a class="waves-effect waves-light btn teal lighten-1" href="http://172.16.3.36:8000/metrics/">Back </a>
 			<h3 class="header">Metric: {{metric.name}}</h3>
 			<div class="col s2">
 				<h6 class="header">Aggregation</h6>
@@ -19,7 +19,7 @@
 					</p>
 				{% endfor %}
 			</div>
-			<div class="col s5">
+			<div class="col s3">
 				<h6 class="header">Granularity</h6>
 				{% for definition in metric.archive_policy.definition %}
 					<p>
@@ -33,17 +33,7 @@
 					</p>
 				{% endfor %}
 			</div>
-			<div class="col s4">
-				<div class="input-field">
-					<input id="startdate" type="text" value="{{start_date}}" name="startdate" class="datepicker">
-					<label>Start Date</label>
-				</div>
-				<div class="input-field">
-					<input id="enddate" type="text" value="{{stop_date}}" name="stopdate" class="datepicker">
-					<label>End Date</label>
-				</div>
-			</div>
-		</div>
+
 		<div class="col s12 center-align">
 			<button class="waves-effect waves-light btn teal lighten-1">
 				Update
@@ -114,9 +104,6 @@
     window.myGraph = new Chart(ctx, config);
   };
 
-	document.addEventListener('DOMContentLoaded', function() {
-    var elems = document.querySelectorAll('.datepicker');
-    var instances = M.Datepicker.init(elems, { format: "yyyy-mm-dd", setDefaultDate: true });
-  });
+
 </script>
 {% endblock %}

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from . import helpers
 from .forms import MetricsForm
-from datetime import date
+from datetime import date, datetime
 import json
 
 global_url = "http://252.3.36.203:8041/v1/metric/"
@@ -37,24 +37,17 @@ def index(request):
     # if successful, print response
     return render(request, 'metrics.html', { "metrics": metrics })
 
-def detail(request, id, definition = 0, aggregation = 'max', start_date = None, stop_date = None):
-
+def detail(request, id, definition = 0, aggregation = 'mean'):
   if request.method == 'POST':
     form = MetricsForm(request.POST)
 
     if form.is_valid():
       definition = form.cleaned_data.get('definition')
       aggregation = form.cleaned_data.get('aggregation')
-      startdate = form.cleaned_data.get('startdate')
-      stopdate = form.cleaned_data.get('stopdate')
 
-      return redirect(detail, id, definition, aggregation, startdate, stopdate)
 
-  if start_date == None:
-    start_date = date.today().replace(day=1)
+      return redirect(detail, id, definition, aggregation)
 
-  if stop_date == None:
-    stop_date = helpers.getLastDateOfMonth()
 
   sess = getSession(request)
 
@@ -66,6 +59,8 @@ def detail(request, id, definition = 0, aggregation = 'max', start_date = None, 
   # Check errors in response
   if "error" in metric:
     return render(request, 'error_page.html', { "error": metric["error"]["message"] })
+
+
 
   # Do the request, this returns TEXT (REST GET METHOD)
   response_values = sess.get(global_url + id + "/measures?aggregation=" + aggregation)
@@ -87,9 +82,9 @@ def detail(request, id, definition = 0, aggregation = 'max', start_date = None, 
   # We filter values by granularity chosen to get the VALUES
   values = [ element[2] for element in values if element[1] == granularity_in_seconds ]
 
+  # Gnocchi accepted fomat: ISO format (datatime)
+  # Calendar accepted fomat: data
   data = {
-    "start_date": start_date,
-    "stop_date": stop_date,
     "metric": metric,
     "labels": labels,
     "values": values,
